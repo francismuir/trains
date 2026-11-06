@@ -441,7 +441,7 @@
       renderJourneysList(searchResult);
     } catch (err) {
       showFormError(
-        `Could not fetch journey data from traintimes.org.uk (${err.message}). Make sure server.py is running or your internet connection is active.`
+        `Could not fetch journey data from traintimes.org.uk (${err.message}). Please check your internet connection and try again.`
       );
     } finally {
       searchTrainsBtn.disabled = false;

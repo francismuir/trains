@@ -1,0 +1,79 @@
+===========================
+Instruction 1
+===========================
+I want a web based app that will allow me to plan a rail trip in the United Kingdom. The user will select:
+1. A departure station
+2. A destination station
+3. An optional date. If no date is entered, use today's date.
+4. An optional departure time. If no departure time is entered use the current time.
+5. An optional arrival time. If no arrival time is entered then ignore this.
+
+Notes:
+1. You can not enter a departure and arrival time. Include one time entry with an option button for departure or arrival time.
+2. When selecting the stations use a dropdown list that allows the user to select from a list of United Kingdom stations. This should be a search box and the dropdown list should be limited to entries that include the text entered.
+
+When the user hits enter, the app will search for trains that meet this criteria and list the next five journeys.
+If the user selects one of the journeys then the app will add the journey details to Google calendar. The user must be logged in to Google in the browser.
+
+Each leg of the journey is added to the calendar separately. Departure and arrival for each leg are entered as separate calendar entries. The format of the entries will be:
+
+Departure
+Title: Depart <departure station name> p<platform number>
+Location: the departure station
+Note: Train details describing the service e.g. Merseyrail from Southport to Liverpool Central
+Notification: 10 minutes
+
+Arrival
+Title: Apprive <arrival station name> p<platform number>
+Location: the arrival station
+Notification: 5 minutes
+
+===========================
+Instruction 2
+===========================
+Those were poor instructions. Can you revert to the original.
+
+===========================
+Instruction 3
+===========================
+Modify the Add Journey to Google Calendar page:
+
+1. Remove the Google API option.
+2. Remove the Open in Browser Google Calendar button.
+3. In the Separate calendar entries to be added, add a third option that includes the departure and arrival in one calendar entry with the title Train from <departure station> to <arrival station>. Include the platforms and train information as for the separate entries.
+
+===========================
+Instruction 4
+===========================
+Modify the Add Journey to Google Calendar page:
+
+1. Remove the Google API option. 
+2. Change the open in Browser option so that it enters the journey information as a single entry:
+Title: Train from <departure station> (p <platform number>) to <arrival station> (p <platform number>)
+Location: <departure station>
+Note: Train details describing the service e.g. Merseyrail from Southport to Liverpool Central
+Notification: 10 minutes
+
+===========================
+Instruction 3
+===========================
+
+That API does not seem to work. I get no results. This is because there is a very small usage allowance on this api. The way I do this at the moment is by calling https://traintimes.org.uk/ and sending parameters. An example of a fully populated URL is https://traintimes.org.uk/WLO/MCO/10:00/11:00a/7%20Nov%202026.
+WLO - departure station
+MCO - arrival station
+10:00 - departure
+Add a to the time (10:00a) for arrival time
+7%20Nov%202026 - the date
+This returns a web page that I can then scrape for the data I need. When the page loads initially it does not include multiple legs and you have to load these by clicking on the link labelled n changes. Can an app reproduce this method of getting journey details?
+
+===========================
+Instruction 4
+===========================
+
+That API does not seem to work. I get no results. This is because there is a very small usage allowance on this api. The way I do this at the moment is by calling https://traintimes.org.uk/ and sending parameters. An example of a fully populated URL is https://traintimes.org.uk/WLO/MCO/10:00/11:00a/7%20Nov%202026.
+WLO - departure station
+MCO - arrival station
+10:00 - departure
+Add a to the time (10:00a) for arrival time
+7%20Nov%202026 - the date
+This returns a web page that I can then scrape for the data I need. When the page loads initially it does not include multiple legs and you have to load these by clicking on the link labelled n changes. Can an app reproduce this method of getting journey details?

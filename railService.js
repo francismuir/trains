@@ -348,37 +348,56 @@
     return journeys;
   }
 
-  // Fetch HTML from traintimes.org.uk via local server.py proxy
+  // Fetch HTML from traintimes.org.uk
+  // Works both on GitHub Pages (via AllOrigins CORS proxy) and locally (via server.py if running)
   async function fetchTraintimesHtml(traintimesUrl) {
-    const proxyEndpoints = [
-      `http://localhost:8081/api/traintimes?url=${encodeURIComponent(traintimesUrl)}`,
-      `http://127.0.0.1:8081/api/traintimes?url=${encodeURIComponent(traintimesUrl)}`,
-      `/api/traintimes?url=${encodeURIComponent(traintimesUrl)}`,
-      `http://localhost:8080/api/traintimes?url=${encodeURIComponent(traintimesUrl)}`,
-      `http://127.0.0.1:8080/api/traintimes?url=${encodeURIComponent(traintimesUrl)}`
-    ];
+    const isLocalhost =
+      typeof window !== "undefined" &&
+      window.location &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1");
+
+    const endpoints = [];
+
+    if (isLocalhost) {
+      endpoints.push(`/api/traintimes?url=${encodeURIComponent(traintimesUrl)}`);
+    }
+
+    // Cloud CORS proxies that work directly from GitHub Pages (https://<user>.github.io)
+    endpoints.push(
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(traintimesUrl)}`,
+      `https://api.allorigins.win/get?url=${encodeURIComponent(traintimesUrl)}`
+    );
 
     let lastError = null;
-    for (const endpoint of proxyEndpoints) {
+    for (const endpoint of endpoints) {
       try {
         const res = await fetch(endpoint);
-        if (res.ok) {
-          const text = await res.text();
-          if (
-            text &&
-            (text.includes("Accessible UK Train Timetables") ||
-              text.includes('<ul class="results">'))
-          ) {
-            return text;
-          }
+        if (!res.ok) continue;
+
+        let text = "";
+        if (endpoint.includes("api.allorigins.win/get?")) {
+          const json = await res.json();
+          text = (json && json.contents) || "";
+        } else {
+          text = await res.text();
+        }
+
+        if (
+          text &&
+          (text.includes("Accessible UK Train Timetables") ||
+            text.includes('<ul class="results">'))
+        ) {
+          return text;
         }
       } catch (err) {
         lastError = err;
       }
     }
 
-    throw new Error(
-      "Local proxy server (server.py on port 8080) is not running or not reachable"
+    throw (
+      lastError ||
+      new Error("Could not fetch timetable page from traintimes.org.uk")
     );
   }
 
