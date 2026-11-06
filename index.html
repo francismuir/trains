@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UK Rail Trip Planner — National Rail &amp; Google Calendar</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 36 24" width="34" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="2" y1="8" x2="34" y2="8"></line>
+            <line x1="2" y1="16" x2="34" y2="16"></line>
+            <polyline points="11 3 20 8 11 16 20 21"></polyline>
+            <polyline points="25 3 16 8 25 16 16 21"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h1>UK Rail Trip Planner</h1>
+          <p class="subtitle">Plan United Kingdom rail journeys via traintimes.org.uk &amp; add leg-by-leg alerts to Google Calendar</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div id="googleStatusBadge" class="status-pill status-ready" title="Data source &amp; Google Calendar status">
+          <span class="status-dot"></span>
+          <span id="googleStatusText">Live Data: traintimes.org.uk</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Journey Search Card -->
+    <section class="card planner-card" aria-labelledby="plannerHeading">
+      <div class="card-header-row">
+        <div>
+          <h2 id="plannerHeading">Plan Your Journey</h2>
+          <p class="card-helper">Select your UK departure and destination stations, then press <kbd>Enter</kbd> to list the next 5 journeys.</p>
+        </div>
+        <div class="quick-presets">
+          <span class="preset-label">Quick example routes:</span>
+          <button type="button" class="chip-btn" data-from="SOP" data-to="LVC">Southport → Liverpool Central</button>
+          <button type="button" class="chip-btn" data-from="WLO" data-to="MCO">Waterloo (Merseyside) → Manchester Oxford Rd</button>
+          <button type="button" class="chip-btn" data-from="LIV" data-to="EUS">Liverpool Lime St → London Euston</button>
+          <button type="button" class="chip-btn" data-from="PGN" data-to="PAD">Paignton → London Paddington</button>
+        </div>
+      </div>
+
+      <form id="journeyForm" novalidate>
+        <div class="stations-grid">
+          <!-- 1. Departure Station Searchable Dropdown -->
+          <div class="field-group station-field" id="departureComboWrapper">
+            <label for="departureSearchInput">
+              1. Departure Station <span class="req">*</span>
+            </label>
+            <div class="combobox-container">
+              <span class="input-icon" aria-hidden="true">🚆</span>
+              <input
+                type="text"
+                id="departureSearchInput"
+                class="station-input"
+                placeholder="Type to filter UK stations (e.g. Southport)..."
+                autocomplete="off"
+                role="combobox"
+                aria-expanded="false"
+                aria-autocomplete="list"
+                aria-controls="departureDropdownList"
+                required
+              />
+              <span id="departureCrsBadge" class="crs-badge hidden"></span>
+              <button type="button" id="clearDepartureBtn" class="clear-input-btn hidden" title="Clear departure station" aria-label="Clear departure station">&times;</button>
+              <ul id="departureDropdownList" class="station-dropdown hidden" role="listbox" aria-label="UK Departure Stations"></ul>
+            </div>
+          </div>
+
+          <!-- Swap Stations Button -->
+          <div class="swap-wrapper">
+            <button type="button" id="swapStationsBtn" class="btn-icon-swap" title="Swap departure and destination stations" aria-label="Swap departure and destination stations">
+              ⇄
+            </button>
+          </div>
+
+          <!-- 2. Destination Station Searchable Dropdown -->
+          <div class="field-group station-field" id="destinationComboWrapper">
+            <label for="destinationSearchInput">
+              2. Destination Station <span class="req">*</span>
+            </label>
+            <div class="combobox-container">
+              <span class="input-icon" aria-hidden="true">🏁</span>
+              <input
+                type="text"
+                id="destinationSearchInput"
+                class="station-input"
+                placeholder="Type to filter UK stations (e.g. Liverpool Central)..."
+                autocomplete="off"
+                role="combobox"
+                aria-expanded="false"
+                aria-autocomplete="list"
+                aria-controls="destinationDropdownList"
+                required
+              />
+              <span id="destinationCrsBadge" class="crs-badge hidden"></span>
+              <button type="button" id="clearDestinationBtn" class="clear-input-btn hidden" title="Clear destination station" aria-label="Clear destination station">&times;</button>
+              <ul id="destinationDropdownList" class="station-dropdown hidden" role="listbox" aria-label="UK Destination Stations"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="datetime-grid">
+          <!-- 3. Optional Date -->
+          <div class="field-group">
+            <div class="label-row">
+              <label for="journeyDateInput">3. Date <span class="opt-tag">(Optional)</span></label>
+              <button type="button" id="clearDateBtn" class="text-link-btn">Use today (clear)</button>
+            </div>
+            <input
+              type="date"
+              id="journeyDateInput"
+              class="standard-input"
+              aria-describedby="dateHint"
+            />
+            <small id="dateHint" class="field-hint">If no date is entered, today's date is used automatically.</small>
+          </div>
+
+          <!-- 4 & 5. Single Time Entry with Option Button for Departure or Arrival Time -->
+          <div class="field-group time-field-group">
+            <div class="label-row">
+              <span class="field-label">4 &amp; 5. Time <span class="opt-tag">(Optional — Single Time Entry)</span></span>
+              <button type="button" id="clearTimeBtn" class="text-link-btn">Clear time</button>
+            </div>
+
+            <div class="time-controls-row">
+              <div class="radio-option-group" role="radiogroup" aria-label="Time type selection">
+                <label class="radio-option" id="depRadioLabel">
+                  <input type="radio" name="timeMode" id="timeModeDeparture" value="departure" checked />
+                  <span>Departure time</span>
+                </label>
+                <label class="radio-option" id="arrRadioLabel">
+                  <input type="radio" name="timeMode" id="timeModeArrival" value="arrival" />
+                  <span>Arrival time</span>
+                </label>
+              </div>
+
+              <div class="time-input-wrapper">
+                <input
+                  type="time"
+                  id="journeyTimeInput"
+                  class="standard-input time-input"
+                  aria-describedby="timeHint"
+                />
+              </div>
+            </div>
+
+            <small id="timeHint" class="field-hint">
+              Departure time selected: if no time is entered, the current time will be used.
+            </small>
+          </div>
+        </div>
+
+        <div id="formErrorBanner" class="error-banner hidden" role="alert"></div>
+
+        <div class="form-actions">
+          <div class="enter-tip">
+            Press <kbd>Enter ↵</kbd> anywhere in the form to search for the next 5 trains
+          </div>
+          <button type="submit" id="searchTrainsBtn" class="btn btn-primary btn-lg">
+            <span id="searchTrainsBtnLabel">Search Next 5 Journeys</span>
+            <kbd class="btn-kbd">↵ Enter</kbd>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Search Results Section (Next 5 Journeys) -->
+    <section id="resultsSection" class="results-section hidden" aria-live="polite">
+      <div class="results-header">
+        <div>
+          <h2 id="resultsTitle">Next 5 Journeys</h2>
+          <p id="resultsSubtitle" class="results-subtitle"></p>
+        </div>
+        <div class="results-meta">
+          <a id="resultsSourceBadge" class="badge-outline" href="#" target="_blank" rel="noopener noreferrer" title="View source page on traintimes.org.uk"></a>
+        </div>
+      </div>
+
+      <div class="calendar-instruction-banner">
+        <div class="banner-icon" aria-hidden="true">📅</div>
+        <div>
+          <strong>Click any journey below to add it to Google Calendar.</strong>
+          For each leg, choose to add separate <strong>Departure</strong> (<code>Depart &lt;station&gt; p&lt;platform&gt;</code>, 10m alert) and <strong>Arrival</strong> (<code>Arrive &lt;station&gt; p&lt;platform&gt;</code>, 5m alert) entries, or a single combined <strong>Train from &lt;departure station&gt; to &lt;arrival station&gt;</strong> entry.
+        </div>
+      </div>
+
+      <div id="journeysList" class="journeys-list"></div>
+    </section>
+  </main>
+
+  <!-- Google Calendar Addition / Confirmation Modal -->
+  <div id="calendarModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="calendarModalTitle">
+    <div class="modal-card modal-xl">
+      <div class="modal-header">
+        <div>
+          <h3 id="calendarModalTitle">Add Journey to Google Calendar</h3>
+          <p id="calendarModalSubtitle" class="modal-subtitle"></p>
+        </div>
+        <button type="button" id="closeCalendarModalBtn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="calendarApiStatusBox" class="calendar-action-panel">
+          <div class="action-panel-main">
+            <div>
+              <h4>Download Calendar File (.ics)</h4>
+              <p id="calendarActionDesc">
+                Use the links on the cards below to add entries directly in your browser's Google Calendar, or download an <code>.ics</code> file containing the leg alerts.
+              </p>
+            </div>
+            <div class="action-buttons-stack">
+              <button type="button" id="downloadIcsBtn" class="btn btn-outline">
+                <span>⬇️ Download .ics (10m &amp; 5m Alerts)</span>
+              </button>
+            </div>
+          </div>
+          <div id="calendarOperationFeedback" class="operation-feedback hidden"></div>
+        </div>
+
+        <h4 class="entries-preview-heading">
+          Separate Calendar Entries to be Added (<span id="entriesCountBadge">0</span> options)
+        </h4>
+        <div id="calendarEntriesPreviewList" class="calendar-entries-grid-three"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="doneCalendarModalBtn" class="btn btn-secondary">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="stations.js"></script>
+  <script src="railService.js"></script>
+  <script src="calendarService.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
